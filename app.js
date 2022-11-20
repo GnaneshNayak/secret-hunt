@@ -4,7 +4,8 @@ const ejs = require("ejs");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 // const encrypt = require("mongoose-encryption");
-const md5 = require("md5");
+// const md5 = require("md5");
+const SHA256 = require("crypto-js/sha256");
 const app = express();
 app.set("view engine", "ejs");
 app.use(express.static("public"));
@@ -38,7 +39,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const newUser = new User({
     email: req.body.username,
-    password: md5(req.body.password),
+    password: SHA256(req.body.password).toString(),
   });
   newUser.save((err) => {
     if (err) console.log(err);
@@ -47,7 +48,8 @@ app.post("/register", (req, res) => {
 });
 app.post("/login", (req, res) => {
   const username = req.body.username;
-  const password = md5(req.body.password);
+  const password = SHA256(req.body.password).toString();
+
   User.findOne({ email: username }, (err, result) => {
     if (err) console.log(err);
     else {
@@ -61,3 +63,4 @@ app.post("/login", (req, res) => {
 });
 
 app.listen(3000, () => console.log("app listening @ localhost 3000"));
+console.log(SHA256("qwert").toString());
