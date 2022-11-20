@@ -5,7 +5,9 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 // const encrypt = require("mongoose-encryption");
 // const md5 = require("md5");
-const SHA256 = require("crypto-js/sha256");
+// const SHA256 = require("crypto-js/sha256");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 const app = express();
 app.set("view engine", "ejs");
 app.use(express.static("public"));
@@ -37,30 +39,35 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const newUser = new User({
-    email: req.body.username,
-    password: SHA256(req.body.password).toString(),
-  });
-  newUser.save((err) => {
-    if (err) console.log(err);
-    else res.render("secrets");
+  bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
+    const newUser = new User({
+      email: req.body.username,
+      password: hash,
+    });
+    newUser.save((err) => {
+      if (err) console.log(err);
+      else res.render("secrets");
+    });
   });
 });
 app.post("/login", (req, res) => {
   const username = req.body.username;
-  const password = SHA256(req.body.password).toString();
+  const password = req.body.password;
 
   User.findOne({ email: username }, (err, result) => {
     if (err) console.log(err);
     else {
       if (result) {
-        if (result.password === password) {
-          res.render("secrets");
-        } else console.log("wrong password");
+        bcrypt.compare(password, result.password, function (err, result) {
+          if (result == true) {
+            res.render("secrets");
+          }
+        });
+        // if (result.password === password) {
+        // } else console.log("wrong password");
       }
     }
   });
 });
 
 app.listen(3000, () => console.log("app listening @ localhost 3000"));
-console.log(SHA256("qwert").toString());
